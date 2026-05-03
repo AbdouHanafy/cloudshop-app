@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: cloudshop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  catalog:
+    build: ./services/catalog
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+
+  cart:
+    build: ./services/cart
+    ports:
+      - "8001:8001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  orders:
+    build: ./services/orders
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=cloudshop
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+
+  auth:
+    build: ./services/auth
+    ports:
+      - "8003:8003"
+    environment:
+      - JWT_SECRET=cloudshop-super-secret-key-2026
+
+volumes:
+  postgres_data:
