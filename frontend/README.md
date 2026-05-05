@@ -1,8 +1,33 @@
-# React + Vite
+# CloudShop Learn Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend for the CloudShop Learn platform.
 
-Currently, two official plugins are available:
+## Local Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Install dependencies and run:
+
+```bash
+npm install
+npm run dev
+```
+
+## Frontend Environment Variables
+
+The frontend can target local or production backend services through Vite environment variables.
+
+Create a `.env` or `.env.local` file in `frontend/` and set:
+
+```bash
+VITE_CATALOG_API_URL=http://localhost:8000
+VITE_LEARNING_LIST_API_URL=http://localhost:8001
+VITE_ENROLLMENTS_API_URL=http://localhost:8002
+VITE_AUTH_API_URL=http://localhost:8003
+```
+
+For Azure production, these values should point to the public backend service URLs.
+
+## Build
+
+```bash
+npm run build
+```
