@@ -28,6 +28,10 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'cloudshop',
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
+  ssl: (process.env.DB_SSL || '').toLowerCase() === 'true'
+    || (process.env.DB_HOST || '').endsWith('.postgres.database.azure.com')
+    ? { rejectUnauthorized: false }
+    : false,
 });
 const SERVICE_METADATA = {
   product: 'cloudshop-learn',

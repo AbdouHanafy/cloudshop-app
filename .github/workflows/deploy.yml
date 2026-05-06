@@ -18,7 +18,8 @@ env:
   LEARNING_LIST_APP_NAME: ${{ vars.LEARNING_LIST_APP_NAME || 'ca-cart' }}
   ENROLLMENTS_APP_NAME: ${{ vars.ENROLLMENTS_APP_NAME || 'ca-orders' }}
   AUTH_APP_NAME: ${{ vars.AUTH_APP_NAME || 'ca-auth' }}
-  REDIS_PORT: ${{ vars.REDIS_PORT || '6379' }}
+  REDIS_CACHE_NAME: ${{ vars.REDIS_CACHE_NAME || 'redis-cloudshop-dev' }}
+  REDIS_PORT: '6380'
 
 jobs:
   validate:
@@ -165,10 +166,17 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
+          REDIS_PASSWORD=$(az redis list-keys --name "$REDIS_CACHE_NAME" --resource-group "$RESOURCE_GROUP" --query primaryKey -o tsv)
+
           az containerapp secret set \
             --name "$AUTH_APP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
             --secrets jwt-secret="$JWT_SECRET"
+
+          az containerapp secret set \
+            --name "$LEARNING_LIST_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --secrets redis-password="$REDIS_PASSWORD"
 
           az containerapp secret set \
             --name "$ENROLLMENTS_APP_NAME" \
@@ -192,7 +200,9 @@ jobs:
             --set-env-vars \
               CORS_ORIGINS="${{ vars.FRONTEND_ORIGIN }}" \
               REDIS_HOST="${{ vars.REDIS_HOST }}" \
-              REDIS_PORT="$REDIS_PORT"
+              REDIS_PORT="$REDIS_PORT" \
+              REDIS_PASSWORD=secretref:redis-password \
+              REDIS_SSL=true
 
       - name: Deploy enrollments service
         run: |
@@ -206,7 +216,8 @@ jobs:
               DB_PORT="${{ vars.DB_PORT || '5432' }}" \
               DB_NAME="${{ vars.DB_NAME }}" \
               DB_USER="${{ vars.DB_USER }}" \
-              DB_PASSWORD=secretref:db-password
+              DB_PASSWORD=secretref:db-password \
+              DB_SSL=true
 
       - name: Deploy auth service
         run: |
